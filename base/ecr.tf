@@ -1,35 +1,26 @@
-resource "aws_ecr_repository" "quotes" {
-  name         = "${var.prefix}-quotes"
+# Create multiple ECR repositories using a loop
+resource "aws_ecr_repository" "repositories" {
+  for_each     = toset(["quotes", "newsfeed", "front_end"])
+  name         = "${var.prefix}-${each.key}"
   force_delete = true
 }
 
-resource "aws_ecr_repository" "newsfeed" {
-  name         = "${var.prefix}-newsfeed"
-  force_delete = true
-}
-
-resource "aws_ecr_repository" "front_end" {
-  name         = "${var.prefix}-front_end"
-  force_delete = true
-}
-
-data "aws_caller_identity" "current" {}
-
+# Local variable for base ECR URL
 locals {
-  ecr_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.prefix}-"
+  ecr_url = "${data.aws_caller_identity.current.account_id}.dkr.ecr.${var.aws_region}.amazonaws.com/${var.prefix}"
 }
 
+# Store ECR URL in AWS SSM Parameter Store
 resource "aws_ssm_parameter" "ecr" {
-  name = "/${var.prefix}/base/ecr"
+  name  = "/${var.prefix}/ecr/base_url"
   value = local.ecr_url
   type  = "String"
 }
 
+# Store ECR URL in a local file (optional)
 resource "local_file" "ecr" {
   filename = "${path.module}/../ecr-url.txt"
-  content = local.ecr_url
+  content  = local.ecr_url
 }
 
-output "repository_base_url" {
-  value = local.ecr_url
-}
+

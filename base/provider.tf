@@ -1,14 +1,13 @@
-# Setup our aws provider
-variable "region" {
-  default = "eu-west-1"
-}
-provider "aws" {
-  region = "${var.region}"
-}
-
 terraform {
-  backend "s3" {
-    region = "eu-west-1"
-    key = "base/terraform.tfstate"
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = "5.91.0"
+    }
   }
 }
+
+provider "aws" {
+  region = var.aws_region
+}
+

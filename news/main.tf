@@ -1,5 +1,3 @@
-
-
 locals {
   vpc_id = data.aws_ssm_parameter.vpc_id.value
   subnet_id = data.aws_ssm_parameter.subnet.value
@@ -26,7 +24,7 @@ resource "aws_security_group" "ssh_access" {
 
 resource "aws_key_pair" "ssh_key" {
   key_name   = "${var.prefix}-news"
-  public_key = "${file("ssh-key/id_rsa.pub")}"
+  public_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
 }
 
 ### Front end
@@ -66,7 +64,7 @@ resource "aws_instance" "front_end" {
 
   iam_instance_profile = "${var.prefix}-news_host"
 
-  availability_zone = "${var.region}a"
+  availability_zone = "${var.aws_region}a"
 
   subnet_id = local.subnet_id
 
@@ -84,7 +82,7 @@ resource "aws_instance" "front_end" {
     host = "${self.public_ip}"
     type = "ssh"
     user = "ec2-user"
-    private_key = "${file("${path.module}/../id_rsa")}"
+    private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
 
   provisioner "remote-exec" {
@@ -139,7 +137,7 @@ resource "aws_instance" "quotes" {
 
   iam_instance_profile = "${var.prefix}-news_host"
 
-  availability_zone = "${var.region}a"
+  availability_zone = "${var.aws_region}a"
 
   subnet_id = local.subnet_id
 
@@ -157,7 +155,7 @@ resource "aws_instance" "quotes" {
     host = "${self.public_ip}"
     type = "ssh"
     user = "ec2-user"
-    private_key = "${file("${path.module}/../id_rsa")}"
+    private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
 
   provisioner "remote-exec" {
@@ -180,7 +178,7 @@ resource "null_resource" "quotes_provision" {
       host = "${aws_instance.quotes.public_ip}"
       type = "ssh"
       user = "ec2-user"
-      private_key = "${file("${path.module}/../id_rsa")}"
+      private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
   provisioner "file" {
     source = "${path.module}/provision-quotes.sh"
@@ -229,7 +227,7 @@ resource "aws_instance" "newsfeed" {
 
   iam_instance_profile = "${var.prefix}-news_host"
 
-  availability_zone = "${var.region}a"
+  availability_zone = "${var.aws_region}a"
 
   subnet_id = local.subnet_id
 
@@ -247,7 +245,7 @@ resource "aws_instance" "newsfeed" {
     host = "${self.public_ip}"
     type = "ssh"
     user = "ec2-user"
-    private_key = "${file("${path.module}/../id_rsa")}"
+    private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
 
   provisioner "remote-exec" {
@@ -270,7 +268,7 @@ resource "null_resource" "newsfeed_provision" {
       host = "${aws_instance.newsfeed.public_ip}"
       type = "ssh"
       user = "ec2-user"
-      private_key = "${file("${path.module}/../id_rsa")}"
+      private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
   provisioner "file" {
     source = "${path.module}/provision-newsfeed.sh"
@@ -289,7 +287,7 @@ resource "null_resource" "front_end_provision" {
       host = "${aws_instance.front_end.public_ip}"
       type = "ssh"
       user = "ec2-user"
-      private_key = "${file("${path.module}/../id_rsa")}"
+      private_key = "${file("${path.module}/ssh-key/id_rsa.pub")}"
   }
   provisioner "file" {
     source = "${path.module}/provision-front_end.sh"
@@ -300,16 +298,13 @@ resource "null_resource" "front_end_provision" {
       "chmod +x /home/ec2-user/provision.sh",
 <<EOF
       /home/ec2-user/provision.sh \
-      --region ${var.region} \
+      --region ${var.aws_region} \
       --docker-image ${local.ecr_url}front_end:latest \
       --quote-service-url http://${aws_instance.quotes.private_ip}:8082 \
       --newsfeed-service-url http://${aws_instance.newsfeed.private_ip}:8081 \
-      --static-url http://${aws_s3_bucket.news.website_endpoint}
+      --static-url http://${aws_s3_bucket_website_configuration.news.website_endpoint}
 EOF
     ]
   }
 }
 
-output "frontend_url" {
-  value = "http://${aws_instance.front_end.public_ip}:8080"
-}
