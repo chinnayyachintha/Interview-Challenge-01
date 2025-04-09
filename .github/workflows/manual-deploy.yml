@@ -37,6 +37,15 @@ on:
           - 'true'
           - 'false'
 
+      auto_destroy:
+        description: 'Auto-destroy resources after apply?'
+        required: true
+        default: 'false'
+        type: choice
+        options:
+          - 'true'
+          - 'false'
+
 env:
   AWS_REGION: ${{ github.event.inputs.aws_region }}
 
@@ -52,11 +61,9 @@ jobs:
 
       - name: Print Runner Hostname
         run: hostname
-        shell: bash
 
       - name: Print Runner IP Address
         run: curl -sL https://ipconfig.io
-        shell: bash
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -84,10 +91,14 @@ jobs:
         working-directory: ${{ github.event.inputs.service }}
 
       - name: Terraform Destroy
-        if: ${{ github.event.inputs.auto_apply == 'true' }}
+        if: ${{ github.event.inputs.auto_destroy == 'true' }}
         run: terraform destroy -auto-approve
         working-directory: ${{ github.event.inputs.service }}
 
       - name: Manual Apply Reminder
         if: ${{ github.event.inputs.auto_apply == 'false' }}
         run: echo "Terraform apply skipped. Please review the plan and apply manually."
+
+      - name: Manual Destroy Reminder
+        if: ${{ github.event.inputs.auto_destroy == 'false' }}
+        run: echo "Terraform destroy skipped. Resources will persist unless destroyed manually."
