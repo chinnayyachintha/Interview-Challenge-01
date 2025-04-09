@@ -50,6 +50,14 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
+      - name: Print Runner Hostname
+        run: hostname
+        shell: bash
+
+      - name: Print Runner IP Address
+        run: curl -sL https://ipconfig.io
+        shell: bash
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
