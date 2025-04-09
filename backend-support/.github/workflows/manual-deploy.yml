@@ -39,7 +39,7 @@ on:
 
 env:
   AWS_REGION: ${{ github.event.inputs.aws_region }}
-  TF_WORKING_DIR: microservices/${{ github.event.inputs.service }}/terraform
+  TF_WORKING_DIR: ${{ github.event.inputs.service }}/terraform
 
 jobs:
   deploy:
