@@ -1,6 +1,6 @@
 # DynamoDB table for state locking
 resource "aws_dynamodb_table" "dynamodb-table" {
-  name           = "${var.prefix}-terraform-locks"
+  name           = "${var.prefix}-terraform-locks-1"
   billing_mode   = "PAY_PER_REQUEST"  # Cost-effective for low-traffic locking
   hash_key       = "LockID"
 

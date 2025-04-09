@@ -1,6 +1,6 @@
 # S3 bucket for Terraform states
 resource "aws_s3_bucket" "terraform_infra" {
-  bucket        = "${var.prefix}-terraform-infra"
+  bucket        = "${var.prefix}-terraform-infra-1"
   force_destroy = false  # Protect state files from accidental deletion
 
   tags = {
