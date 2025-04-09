@@ -39,7 +39,7 @@ on:
 
 env:
   AWS_REGION: ${{ github.event.inputs.aws_region }}
-  TF_WORKING_DIR: ${{ github.event.inputs.service }}/terraform
+  TF_WORKING_DIR: ./microservices/${{ github.event.inputs.service }}
 
 jobs:
   deploy:
@@ -50,6 +50,14 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Verify Terraform Directory Exists
+        run: |
+          echo "Checking: ${{ env.TF_WORKING_DIR }}"
+          if [ ! -d "${{ env.TF_WORKING_DIR }}" ]; then
+            echo "ERROR: Terraform directory not found!"
+            exit 1
+          fi
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -76,6 +84,6 @@ jobs:
         working-directory: ${{ env.TF_WORKING_DIR }}
         run: terraform apply -auto-approve tfplan
 
-      - name: Manual Approval Reminder
+      - name: Manual Apply Reminder
         if: ${{ github.event.inputs.auto_apply == 'false' }}
-        run: echo "Terraform apply skipped. Please review and apply manually."
+        run: echo "Terraform apply skipped. Please review the plan and apply manually."
