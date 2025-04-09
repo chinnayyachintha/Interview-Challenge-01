@@ -83,6 +83,11 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: ${{ github.event.inputs.service }}
 
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.auto_apply == 'true' }}
+        run: terraform destroy -auto-approve
+        working-directory: ${{ github.event.inputs.service }}
+
       - name: Manual Apply Reminder
         if: ${{ github.event.inputs.auto_apply == 'false' }}
         run: echo "Terraform apply skipped. Please review the plan and apply manually."
